@@ -1,0 +1,14 @@
+{
+	"lokendra": [
+		{
+			"input": "Win ₹5000 by clicking here now!",
+			"prediction": "spam",
+			"timestamp": "2025-07-02 22:00"
+		},
+		{
+			"input": "Meeting rescheduled to 4 PM tomorrow.",
+			"prediction": "ham",
+			"timestamp": "2025-07-02 22:05"
+		}
+	]
+}

@@ -1,0 +1,50 @@
+text,prediction,score
+"Project Manager
+Subject: 🚨 Congratulations! You’ve Won a $1,000 Gift Card!
+
+From: rewards@bigoffer-prize.com
+
+Message:
+
+Dear Customer,
+
+You have been selected as the lucky winner of our exclusive $1,000 Amazon Gift Card! 🎉
+
+To claim your prize, simply click the link below and fill out your details:
+👉 Claim Your Reward Now
+
+Hurry, this offer expires in 24 hours!
+
+Thank you for being a valued customer.",Spam,81.76
+"Subject: Meeting Reminder – Project Discussion
+
+Body:
+
+Hello Team,
+
+This is a reminder for our scheduled meeting tomorrow at 11:00 AM in the conference room. We will be discussing the progress of our project and finalizing the next steps. Please bring along the updated reports.
+
+Let me know if anyone is unable to attend.
+
+Best regards,
+Ritika Sharma
+Project Manager",Ham,0.67
+"Project Manager
+Subject: 🚨 Congratulations! You’ve Won a $1,000 Gift Card!
+
+From: rewards@bigoffer-prize.com
+
+Message:
+
+Dear Customer,
+
+You have been selected as the lucky winner of our exclusive $1,000 Amazon Gift Card! 🎉
+
+To claim your prize, simply click the link below and fill out your details:
+👉 Claim Your Reward Now
+
+Hurry, this offer expires in 24 hours!
+
+Thank you for being a valued customer.
+— The Rewards Team
+",Spam,80.03

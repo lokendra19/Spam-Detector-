@@ -1,0 +1,18 @@
+{
+    "lokendra": {
+        "password": "$2b$12$z0X/1W3v9pN7Cv8AgFPL0.0A1fFzF5EjM1iXpkxSkdGJdTGrcs0hO",
+        "role": "user"
+    },
+    "admin": {
+        "password": "$2b$12$D3U14/NyflN1q2gRmxJmlOWTKDKn/Jmew1U5YJH8FtLsHdGpXkM1S",
+        "role": "admin"
+    },
+    "lucky": {
+        "password": "$2b$12$rUeYRWn/oNWlPJ3w7DX0IumkiMfMgQRNq0wNMBuk2dtb752Mygbv.",
+        "role": "user"
+    },
+    "dev": {
+        "password": "$2b$12$GwZtQoc6Sg4qBw9ECtLDE.YeDNRRW1llVqT649tKC30du9RE1K.gu",
+        "role": "user"
+    }
+}
