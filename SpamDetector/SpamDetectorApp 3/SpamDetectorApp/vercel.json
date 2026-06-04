@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "buildCommand": "",
+  "outputDirectory": "public",
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "https://spam-detector-jp21.onrender.com",
+      "permanent": false
+    },
+    {
+      "source": "/(.*)",
+      "destination": "https://spam-detector-jp21.onrender.com/$1",
+      "permanent": false
+    }
+  ]
+}
