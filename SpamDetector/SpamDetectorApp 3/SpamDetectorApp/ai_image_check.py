@@ -1,8 +1,14 @@
+import os
 import streamlit as st
-from transformers import AutoImageProcessor, AutoModelForImageClassification
 from PIL import Image
-import torch
 import exifread
+
+# On Render's free tier, skip the 500MB transformer model to stay within memory limits
+_ON_RENDER = bool(os.environ.get('RENDER'))
+
+if not _ON_RENDER:
+    from transformers import AutoImageProcessor, AutoModelForImageClassification
+    import torch
 
 @st.cache_resource
 def load_model():
@@ -70,6 +76,12 @@ def analyze_metadata(metadata: dict):
 def ai_image_checker():
     st.title("🖼️ AI Image Checker")
 
+    if _ON_RENDER:
+        st.warning(
+            "⚠️ **AI model classification is disabled on the free cloud tier** due to memory limits (~500 MB model). "
+            "Metadata analysis below still works. Run the app locally for full AI detection."
+        )
+
     uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
     if uploaded_file:
         image = Image.open(uploaded_file).convert("RGB")
@@ -82,32 +94,37 @@ def ai_image_checker():
         summary = summarize_metadata(metadata)
         st.json(summary)
 
-        st.write("🔍 Running AI vs Human Detector...")
-
-        #AI/Human classifier
-        model, processor = load_model()
-        inputs = processor(images=image, return_tensors="pt")
-        with torch.no_grad():
-            outputs = model(**inputs)
-            probs = torch.nn.functional.softmax(outputs.logits, dim=1)[0]
-
-        labels = list(model.config.id2label.values())
-        prob_dict = {labels[i].lower(): float(probs[i]) * 100 for i in range(len(labels))}
-
-        real_prob = prob_dict.get("real", prob_dict.get("human", 0.0))
-        ai_prob = prob_dict.get("fake", prob_dict.get("ai", 0.0))
-
-        # Detection Result (Metadata + Model Combined)
-        st.subheader("📌 Detection Result")
-
+        # Metadata-based detection (always available)
+        st.subheader("📌 Detection Result (Metadata-based)")
         has_meta = any(k in summary for k in ["Camera/Device", "Date Taken", "Software"])
-
         if has_meta:
             st.success("✅ Metadata found → Likely Human Image")
-        elif not metadata or "Error" in metadata or not has_meta:
-            st.error("⚠️ No metadata found → Possibly AI-generated")
         else:
-            # fallback to model-based prediction
+            st.error("⚠️ No metadata found → Possibly AI-generated or stripped")
+
+        # Metadata consistency analysis (always available)
+        st.subheader("🧩 Metadata Consistency Check")
+        analysis = analyze_metadata(metadata)
+        for issue in analysis:
+            st.write(issue)
+
+        # AI model classification (only when not on Render)
+        if not _ON_RENDER:
+            st.write("🔍 Running AI vs Human Detector...")
+
+            model, processor = load_model()
+            inputs = processor(images=image, return_tensors="pt")
+            with torch.no_grad():
+                outputs = model(**inputs)
+                probs = torch.nn.functional.softmax(outputs.logits, dim=1)[0]
+
+            labels = list(model.config.id2label.values())
+            prob_dict = {labels[i].lower(): float(probs[i]) * 100 for i in range(len(labels))}
+
+            real_prob = prob_dict.get("real", prob_dict.get("human", 0.0))
+            ai_prob = prob_dict.get("fake", prob_dict.get("ai", 0.0))
+
+            st.subheader("📌 AI Model Detection Result")
             if ai_prob >= 70:
                 st.error(f"⚠️ Likely AI-generated Image (Confidence: {ai_prob:.1f}%)")
             elif real_prob >= 70:
@@ -115,16 +132,9 @@ def ai_image_checker():
             else:
                 st.warning(f"🤔 Uncertain Prediction\n\nAI: {ai_prob:.1f}% | Real: {real_prob:.1f}%")
 
-        # ✅ Probability Breakdown
-        st.subheader("📊 Probability Breakdown")
-        st.write(f"**Real/Human:** {real_prob:.1f}%")
-        st.write(f"**AI/Fake:** {ai_prob:.1f}%")
-
-        # ✅ Metadata consistency analysis
-        st.subheader("🧩 Metadata Consistency Check")
-        analysis = analyze_metadata(metadata)
-        for issue in analysis:
-            st.write(issue)
+            st.subheader("📊 Probability Breakdown")
+            st.write(f"**Real/Human:** {real_prob:.1f}%")
+            st.write(f"**AI/Fake:** {ai_prob:.1f}%")
 
         st.info(
             "ℹ️ AI detection + metadata analysis together improves reliability. "
