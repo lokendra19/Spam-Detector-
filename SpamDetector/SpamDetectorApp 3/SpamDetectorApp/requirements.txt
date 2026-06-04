@@ -4,3 +4,6 @@ scikit-learn
 pandas
 bcrypt
 tldextract
+transformers
+torch
+pillow
