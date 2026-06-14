@@ -14,5 +14,9 @@
     "dev": {
         "password": "$2b$12$GwZtQoc6Sg4qBw9ECtLDE.YeDNRRW1llVqT649tKC30du9RE1K.gu",
         "role": "user"
+    },
+    "lnirban19": {
+        "password": "$2b$12$76YyNB67jltXs6SiFxstfew8GZe4HE8OIjzCt4LzSWcUEVRe6rjES",
+        "role": "user"
     }
 }

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SpamShield – Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --cyan:#00f5ff;--purple:#a855f7;--green:#00ff88;--red:#ff4757;--amber:#ffa502;
+  --bg:#050810;--surface:#0d1117;--surface2:#111827;--border:rgba(255,255,255,.07);
+  --text:#e2e8f0;--muted:#64748b;--muted2:#94a3b8;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* ── Ambient bg ── */
+.bg-ambient{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(100px);opacity:.2;animation:drift 15s ease-in-out infinite alternate}
+.orb1{width:600px;height:600px;background:var(--cyan);top:-200px;left:-200px;animation-delay:0s}
+.orb2{width:500px;height:500px;background:var(--purple);bottom:-200px;right:-200px;animation-delay:-6s}
+@keyframes drift{from{transform:translate(0,0)}to{transform:translate(40px,30px)}}
+.scanlines{position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,245,255,.012) 2px,rgba(0,245,255,.012) 4px);pointer-events:none;z-index:1}
+
+/* ── Layout ── */
+.layout{display:flex;min-height:100vh;position:relative;z-index:2}
+
+/* ── Sidebar ── */
+.sidebar{width:260px;flex-shrink:0;background:rgba(13,17,23,.9);border-right:1px solid var(--border);backdrop-filter:blur(20px);display:flex;flex-direction:column;padding:1.5rem 1rem;position:sticky;top:0;height:100vh;transition:transform .3s}
+.sidebar-logo{display:flex;align-items:center;gap:.75rem;padding:.5rem .75rem 1.5rem;border-bottom:1px solid var(--border);margin-bottom:1rem}
+.sidebar-logo .icon{font-size:1.8rem;filter:drop-shadow(0 0 8px var(--cyan))}
+.sidebar-logo h2{font-family:'Space Grotesk',sans-serif;font-size:1.2rem;font-weight:700;background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sidebar-logo small{display:block;font-size:.7rem;color:var(--muted);margin-top:.1rem;-webkit-text-fill-color:var(--muted)}
+.nav-label{font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:.25rem .75rem;margin-bottom:.4rem;margin-top:.75rem}
+.nav-item{display:flex;align-items:center;gap:.75rem;padding:.7rem .75rem;border-radius:10px;cursor:pointer;font-size:.875rem;font-weight:500;color:var(--muted2);border:1px solid transparent;transition:all .2s;text-decoration:none;margin-bottom:.2rem}
+.nav-item:hover{background:rgba(255,255,255,.05);color:var(--text);border-color:var(--border)}
+.nav-item.active{background:linear-gradient(135deg,rgba(0,245,255,.12),rgba(168,85,247,.12));color:var(--cyan);border-color:rgba(0,245,255,.2)}
+.nav-item svg{width:18px;height:18px;flex-shrink:0}
+.sidebar-footer{margin-top:auto;padding-top:1rem;border-top:1px solid var(--border)}
+.user-chip{display:flex;align-items:center;gap:.75rem;padding:.6rem .75rem;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--border)}
+.avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--purple));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;color:#050810;flex-shrink:0}
+.user-info strong{display:block;font-size:.85rem;color:var(--text)}
+.user-info small{font-size:.7rem;color:var(--muted)}
+.logout-btn{display:flex;align-items:center;gap:.5rem;margin-top:.75rem;padding:.6rem .75rem;border-radius:10px;background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.2);color:#ff6b7a;font-size:.8rem;font-weight:500;cursor:pointer;text-decoration:none;transition:all .2s}
+.logout-btn:hover{background:rgba(255,71,87,.15);border-color:rgba(255,71,87,.4)}
+
+/* ── Main content ── */
+.main{flex:1;padding:2rem;max-width:900px;margin:0 auto;width:100%}
+.page-header{margin-bottom:2rem}
+.page-header h1{font-family:'Space Grotesk',sans-serif;font-size:2rem;font-weight:700}
+.page-header h1 span{background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.page-header p{color:var(--muted);margin-top:.35rem;font-size:.9rem}
+
+/* ── Tabs ── */
+.tab-bar{display:flex;gap:.5rem;margin-bottom:1.75rem;background:rgba(255,255,255,.04);padding:5px;border-radius:14px;border:1px solid var(--border);width:fit-content}
+.tab-btn{padding:.55rem 1.2rem;border-radius:10px;border:none;background:transparent;color:var(--muted);font-size:.875rem;font-weight:500;cursor:pointer;transition:all .25s;font-family:'Inter',sans-serif}
+.tab-btn.active{background:linear-gradient(135deg,rgba(0,245,255,.15),rgba(168,85,247,.15));color:var(--cyan);border:1px solid rgba(0,245,255,.2)}
+
+/* ── Card ── */
+.card{background:rgba(13,17,23,.8);border:1px solid var(--border);border-radius:18px;backdrop-filter:blur(16px);padding:1.75rem;margin-bottom:1.25rem}
+.card-title{font-size:.95rem;font-weight:600;color:var(--muted2);display:flex;align-items:center;gap:.5rem;margin-bottom:1.1rem}
+.card-title svg{width:18px;height:18px;color:var(--cyan)}
+
+/* ── Textarea ── */
+textarea{width:100%;min-height:150px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:1rem;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;resize:vertical;outline:none;transition:all .25s;line-height:1.6}
+textarea:focus{border-color:var(--cyan);background:rgba(0,245,255,.04);box-shadow:0 0 0 3px rgba(0,245,255,.08)}
+.char-count{text-align:right;font-size:.75rem;color:var(--muted);margin-top:.4rem}
+
+/* ── Analyze button ── */
+.analyze-btn{display:flex;align-items:center;justify-content:center;gap:.6rem;width:100%;padding:.9rem;border:none;border-radius:12px;background:linear-gradient(135deg,var(--cyan),var(--purple));color:#050810;font-size:1rem;font-weight:700;cursor:pointer;margin-top:1rem;transition:all .3s;position:relative;overflow:hidden;font-family:'Inter',sans-serif}
+.analyze-btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,245,255,.3)}
+.analyze-btn:active{transform:translateY(0)}
+.analyze-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.analyze-btn .spinner{width:18px;height:18px;border:2px solid rgba(5,8,16,.3);border-top-color:#050810;border-radius:50%;animation:spin .7s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Result area ── */
+#result{display:none;animation:fadeUp .4s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Result verdict card ── */
+.verdict{border-radius:16px;padding:1.5rem;display:flex;align-items:center;gap:1.25rem;border:1px solid transparent}
+.verdict.spam{background:rgba(255,71,87,.1);border-color:rgba(255,71,87,.3)}
+.verdict.ham{background:rgba(0,255,136,.08);border-color:rgba(0,255,136,.25)}
+.verdict-icon{font-size:3rem;flex-shrink:0;animation:popIn .4s cubic-bezier(.34,1.56,.64,1) both .1s}
+@keyframes popIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
+.verdict-title{font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:700}
+.verdict.spam .verdict-title{color:var(--red)}
+.verdict.ham .verdict-title{color:var(--green)}
+.verdict-sub{font-size:.85rem;color:var(--muted);margin-top:.2rem}
+
+/* ── Gauge ── */
+.gauge-wrap{text-align:center}
+.gauge-label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:.4rem}
+svg.gauge{overflow:visible}
+
+/* ── Score bar ── */
+.score-bar-wrap{margin-top:1rem}
+.score-bar-label{display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.4rem}
+.score-bar-label span:first-child{color:var(--muted2)}
+.score-val{font-weight:700;font-size:.9rem}
+.bar-track{height:10px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;width:0;transition:width 1.2s cubic-bezier(.22,1,.36,1)}
+.bar-fill.spam{background:linear-gradient(90deg,var(--amber),var(--red))}
+.bar-fill.ham{background:linear-gradient(90deg,var(--cyan),var(--green))}
+
+/* ── Category badge ── */
+.category-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.35rem .85rem;border-radius:99px;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);color:var(--purple);font-size:.8rem;font-weight:600;margin-top:.75rem}
+
+/* ── Link results ── */
+.link-item{display:flex;align-items:center;gap:.75rem;padding:.6rem .9rem;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);margin-top:.5rem;font-size:.83rem}
+.link-item.suspicious{background:rgba(255,71,87,.08);border-color:rgba(255,71,87,.25)}
+.link-item.safe{background:rgba(0,255,136,.06);border-color:rgba(0,255,136,.2)}
+.link-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.link-item.suspicious .link-dot{background:var(--red);box-shadow:0 0 6px var(--red)}
+.link-item.safe .link-dot{background:var(--green);box-shadow:0 0 6px var(--green)}
+.link-url{font-family:monospace;font-size:.78rem;color:var(--muted2);word-break:break-all}
+
+/* ── Image upload ── */
+.upload-zone{border:2px dashed var(--border);border-radius:14px;padding:2.5rem;text-align:center;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--cyan);background:rgba(0,245,255,.04)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.upload-zone svg{width:40px;height:40px;color:var(--muted);margin-bottom:.75rem;transition:color .25s}
+.upload-zone:hover svg{color:var(--cyan)}
+.upload-zone p{color:var(--muted);font-size:.875rem}
+.upload-zone strong{color:var(--cyan)}
+#image-preview-wrap{display:none;margin-top:1rem;text-align:center}
+#image-preview{max-width:100%;max-height:280px;border-radius:12px;border:1px solid var(--border);object-fit:cover}
+
+/* ── Metadata results ── */
+.meta-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.75rem;margin-top:.75rem}
+.meta-item{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:.75rem}
+.meta-key{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.25rem}
+.meta-val{font-size:.85rem;color:var(--text);font-weight:500}
+.issue-item{display:flex;align-items:flex-start;gap:.6rem;padding:.6rem .9rem;border-radius:10px;font-size:.83rem;margin-top:.4rem}
+.issue-item.ok{background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.2);color:#6bffb0}
+.issue-item.warn{background:rgba(255,165,2,.08);border:1px solid rgba(255,165,2,.25);color:#ffc53d}
+.issue-item.danger{background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.25);color:#ff6b7a}
+
+/* ── Image verdict ── */
+.img-verdict{display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;border-radius:12px;margin-top:.75rem;border:1px solid transparent}
+.img-verdict.real{background:rgba(0,255,136,.08);border-color:rgba(0,255,136,.25)}
+.img-verdict.ai{background:rgba(255,71,87,.08);border-color:rgba(255,71,87,.25)}
+
+/* ── Responsive ── */
+@media(max-width:768px){
+  .sidebar{position:fixed;left:0;top:0;z-index:50;transform:translateX(-100%);width:240px}
+  .sidebar.open{transform:translateX(0)}
+  .main{padding:1.25rem}
+  .hamburger{display:flex}
+}
+.hamburger{display:none;position:fixed;top:1rem;left:1rem;z-index:60;width:40px;height:40px;background:rgba(13,17,23,.9);border:1px solid var(--border);border-radius:10px;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(10px)}
+.hamburger span{display:block;width:18px;height:2px;background:var(--cyan);border-radius:2px;transition:all .3s}
+.hamburger span+span{margin-top:4px}
+
+/* ── Pulse dot ── */
+.pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(0,255,136,.5);animation:pulseDot 2s infinite;display:inline-block;margin-right:.35rem}
+@keyframes pulseDot{0%{box-shadow:0 0 0 0 rgba(0,255,136,.5)}70%{box-shadow:0 0 0 8px rgba(0,255,136,0)}100%{box-shadow:0 0 0 0 rgba(0,255,136,0)}}
+
+/* ── Section hidden by tab ── */
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+</style>
+</head>
+<body>
+
+<div class="bg-ambient">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+</div>
+<div class="scanlines"></div>
+
+<button class="hamburger" id="hbg" onclick="toggleSidebar()">
+  <span></span><span></span><span></span>
+</button>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span class="icon">🛡️</span>
+      <div>
+        <h2>SpamShield</h2>
+        <small>Threat Intelligence Platform</small>
+      </div>
+    </div>
+
+    <div class="nav-label">Detection</div>
+    <a href="#" class="nav-item active" onclick="switchTab('spam',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      Spam Classifier
+    </a>
+    <a href="#" class="nav-item" onclick="switchTab('image',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      AI Image Checker
+    </a>
+
+    <div class="nav-label">Data</div>
+    <a href="{{ url_for('history') }}" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Scan History
+    </a>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="avatar">{{ username[0].upper() }}</div>
+        <div class="user-info">
+          <strong>{{ username }}</strong>
+          <small><span class="pulse-dot"></span>Online</small>
+        </div>
+      </div>
+      <a href="{{ url_for('logout') }}" class="logout-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <!-- ── SPAM CLASSIFIER ── -->
+    <div class="tab-panel active" id="panel-spam">
+      <div class="page-header">
+        <h1>Email <span>Spam Detector</span></h1>
+        <p>Paste any email or message to analyse it for spam, phishing links and threat type.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Message Input
+        </div>
+        <textarea id="msgInput" placeholder="Paste email/message content here…" oninput="updateCount()"></textarea>
+        <div class="char-count"><span id="charCount">0</span> characters</div>
+        <button class="analyze-btn" id="analyzeBtn" onclick="analyzeSpam()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span id="btnText">Analyze Message</span>
+          <div class="spinner" id="spinner"></div>
+        </button>
+      </div>
+
+      <!-- Result -->
+      <div id="result">
+        <!-- Verdict -->
+        <div class="card" id="verdictCard">
+          <div class="verdict" id="verdictBox">
+            <div class="verdict-icon" id="verdictIcon"></div>
+            <div>
+              <div class="verdict-title" id="verdictTitle"></div>
+              <div class="verdict-sub" id="verdictSub"></div>
+              <div id="categoryBadge"></div>
+            </div>
+          </div>
+
+          <div class="score-bar-wrap">
+            <div class="score-bar-label">
+              <span>Spam Confidence Score</span>
+              <span class="score-val" id="scoreVal"></span>
+            </div>
+            <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
+          </div>
+        </div>
+
+        <!-- Links -->
+        <div class="card" id="linksCard" style="display:none">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            Link Scanner
+          </div>
+          <div id="linksContent"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── IMAGE CHECKER ── -->
+    <div class="tab-panel" id="panel-image">
+      <div class="page-header">
+        <h1>AI Image <span>Checker</span></h1>
+        <p>Upload an image to detect metadata and check if it's AI-generated or real.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload Image
+        </div>
+        <div class="upload-zone" id="dropZone">
+          <input type="file" id="imageInput" accept="image/*" onchange="handleImageUpload(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <p>Drag & drop or <strong>click to browse</strong></p>
+          <p style="font-size:.75rem;margin-top:.35rem;color:var(--muted)">JPG, JPEG, PNG supported</p>
+        </div>
+        <div id="image-preview-wrap">
+          <img id="image-preview" alt="Preview"/>
+        </div>
+        <button class="analyze-btn" id="imgBtn" onclick="analyzeImage()" style="display:none;margin-top:1rem">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span>Analyse Image</span>
+          <div class="spinner" id="imgSpinner"></div>
+        </button>
+      </div>
+
+      <div id="imageResult" style="display:none;animation:fadeUp .4s ease">
+        <div class="card" id="imgVerdictCard"></div>
+        <div class="card" id="metaCard" style="display:none">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Metadata Summary
+          </div>
+          <div id="metaContent"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Metadata Analysis
+          </div>
+          <div id="issuesContent"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ── Tab switching ──
+function switchTab(name, el){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if(el) el.classList.add('active');
+}
+
+// ── Sidebar toggle (mobile) ──
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open')}
+
+// ── Char count ──
+function updateCount(){
+  document.getElementById('charCount').textContent=document.getElementById('msgInput').value.length;
+}
+
+// ── Spam analysis ──
+async function analyzeSpam(){
+  const text=document.getElementById('msgInput').value.trim();
+  if(!text){shake(document.getElementById('msgInput'));return}
+  setLoading(true,'analyzeBtn','spinner','btnText','Analyzing…');
+  try{
+    const res=await fetch('/api/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+    const data=await res.json();
+    renderSpamResult(data);
+  }catch(e){alert('Error: '+e.message)}
+  finally{setLoading(false,'analyzeBtn','spinner','btnText','Analyze Message')}
+}
+
+function renderSpamResult(data){
+  const isSpam=data.label==='Spam';
+  const box=document.getElementById('verdictBox');
+  box.className='verdict '+(isSpam?'spam':'ham');
+  document.getElementById('verdictIcon').textContent=isSpam?'🚨':'✅';
+  document.getElementById('verdictTitle').textContent=isSpam?'Spam Detected':'Safe Message';
+  document.getElementById('verdictSub').textContent=isSpam
+    ?'This message contains spam indicators. Do not interact.'
+    :'No spam patterns detected. Message appears legitimate.';
+
+  const badge=document.getElementById('categoryBadge');
+  badge.innerHTML=isSpam?`<div class="category-badge">📂 ${data.category}</div>`:''
+
+  const score=data.score;
+  document.getElementById('scoreVal').textContent=score+'%';
+  const fill=document.getElementById('barFill');
+  fill.className='bar-fill '+(isSpam?'spam':'ham');
+  setTimeout(()=>{fill.style.width=score+'%'},50);
+
+  // Links
+  const linksCard=document.getElementById('linksCard');
+  if(data.links&&data.links.length){
+    linksCard.style.display='';
+    document.getElementById('linksContent').innerHTML=data.links.map(l=>`
+      <div class="link-item ${l.suspicious?'suspicious':'safe'}">
+        <div class="link-dot"></div>
+        <span>${l.suspicious?'⚠️ Suspicious':'✅ Safe'}</span>
+        <span class="link-url">${l.url}</span>
+      </div>`).join('');
+  }else{
+    linksCard.style.display='none';
+  }
+
+  document.getElementById('result').style.display='block';
+  setTimeout(()=>document.getElementById('result').scrollIntoView({behavior:'smooth',block:'nearest'}),50);
+}
+
+// ── Image analysis ──
+let selectedFile=null;
+function handleImageUpload(input){
+  const file=input.files[0];
+  if(!file)return;
+  selectedFile=file;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    document.getElementById('image-preview').src=e.target.result;
+    document.getElementById('image-preview-wrap').style.display='block';
+    document.getElementById('imgBtn').style.display='flex';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyzeImage(){
+  if(!selectedFile)return;
+  setLoading(true,'imgBtn','imgSpinner',null,null);
+  const fd=new FormData();
+  fd.append('image',selectedFile);
+  try{
+    const res=await fetch('/api/image_check',{method:'POST',body:fd});
+    const data=await res.json();
+    renderImageResult(data);
+  }catch(e){alert('Error: '+e.message)}
+  finally{setLoading(false,'imgBtn','imgSpinner',null,null)}
+}
+
+function renderImageResult(data){
+  // Verdict
+  const isReal=data.verdict==='likely_real';
+  const vc=document.getElementById('imgVerdictCard');
+  vc.innerHTML=`
+    <div class="card-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="9 11 12 14 22 4"/></svg>
+      Detection Result
+    </div>
+    <div class="img-verdict ${isReal?'real':'ai'}">
+      <span style="font-size:2.5rem">${isReal?'📷':'🤖'}</span>
+      <div>
+        <div style="font-size:1.2rem;font-weight:700;color:${isReal?'var(--green)':'var(--red)'}">${isReal?'Likely Real Photo':'Possibly AI-Generated'}</div>
+        <div style="font-size:.82rem;color:var(--muted);margin-top:.2rem">${isReal?'Metadata is consistent with a real camera image.':'No metadata found — may be synthetic or stripped.'}</div>
+      </div>
+    </div>`;
+
+  // Metadata summary
+  const metaCard=document.getElementById('metaCard');
+  if(Object.keys(data.summary).length){
+    metaCard.style.display='';
+    document.getElementById('metaContent').innerHTML=
+      `<div class="meta-grid">${Object.entries(data.summary).map(([k,v])=>`
+        <div class="meta-item"><div class="meta-key">${k}</div><div class="meta-val">${v}</div></div>`).join('')}</div>`;
+  }else{
+    metaCard.style.display='none';
+  }
+
+  // Issues
+  document.getElementById('issuesContent').innerHTML=data.issues.map(i=>`
+    <div class="issue-item ${i.type}">
+      <span>${i.type==='ok'?'✅':i.type==='warn'?'⚠️':'❌'}</span>
+      <span>${i.msg}</span>
+    </div>`).join('');
+
+  document.getElementById('imageResult').style.display='block';
+}
+
+// ── Helpers ──
+function setLoading(on,btnId,spinnerId,textId,loadingText){
+  const btn=document.getElementById(btnId);
+  const sp=document.getElementById(spinnerId);
+  btn.disabled=on;
+  if(sp) sp.style.display=on?'block':'none';
+  if(textId){
+    const t=document.getElementById(textId);
+    if(on&&loadingText) t.dataset.orig=t.textContent,t.textContent=loadingText;
+    else if(!on&&t.dataset.orig) t.textContent=t.dataset.orig;
+  }
+}
+function shake(el){
+  el.style.animation='none';
+  el.offsetHeight;
+  el.style.animation='shake .4s ease';
+  el.addEventListener('animationend',()=>el.style.animation='',{once:true});
+}
+document.head.insertAdjacentHTML('beforeend',`<style>@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}</style>`);
+
+// ── Drag & drop for images ──
+const dz=document.getElementById('dropZone');
+['dragover','dragenter'].forEach(e=>dz.addEventListener(e,ev=>{ev.preventDefault();dz.classList.add('drag')}));
+['dragleave','drop'].forEach(e=>dz.addEventListener(e,()=>dz.classList.remove('drag')));
+dz.addEventListener('drop',ev=>{
+  ev.preventDefault();
+  const file=ev.dataTransfer.files[0];
+  if(file&&file.type.startsWith('image/')){
+    document.getElementById('imageInput').files=ev.dataTransfer.files;
+    handleImageUpload(document.getElementById('imageInput'));
+  }
+});
+</script>
+</body>
+</html>

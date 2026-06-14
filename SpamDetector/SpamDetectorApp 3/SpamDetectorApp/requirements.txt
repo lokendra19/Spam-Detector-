@@ -1,11 +1,9 @@
-streamlit
+flask>=3.0.0
+gunicorn>=21.2.0
 nltk
 scikit-learn==1.7.0
 pandas
 bcrypt
 tldextract
-transformers
-torch
-torchvision
 pillow
 exifread
